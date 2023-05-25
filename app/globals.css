@@ -16,3 +16,13 @@
 .leaflet-top {
   z-index: 0 !important;
 }
+
+@layer components {
+  .rdrMonth {
+    @apply !w-full;
+  }
+
+  .rdrCalendarWrapper {
+    @apply !text-base !w-full;
+  }
+}
