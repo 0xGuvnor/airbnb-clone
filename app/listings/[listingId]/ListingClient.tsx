@@ -4,9 +4,20 @@ import Container from "@/app/components/Container";
 import { categories } from "@/app/components/Navbar/Categories";
 import ListingHead from "@/app/components/listings/ListingHead";
 import ListingInfo from "@/app/components/listings/ListingInfo";
+import useLoginModal from "@/app/hooks/useLoginModal";
 import { SafeListing, SafeUser } from "@/app/types";
 import { Reservation } from "@prisma/client";
-import { useMemo } from "react";
+import axios from "axios";
+import { differenceInDays, eachDayOfInterval } from "date-fns";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
+
+const initialDateRange = {
+  startDate: new Date(),
+  endDate: new Date(),
+  key: "selection",
+};
 
 interface Props {
   reservations?: Reservation[];
@@ -14,11 +25,73 @@ interface Props {
   currentUser?: SafeUser | null;
 }
 
-const ListingClient = ({ reservations, listing, currentUser }: Props) => {
+const ListingClient = ({ reservations = [], listing, currentUser }: Props) => {
+  const loginModal = useLoginModal();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [totalPrice, setTotalPrice] = useState(listing.price);
+  const [dateRange, setDateRange] = useState(initialDateRange);
+
+  const disabledDates = useMemo(() => {
+    let dates: Date[] = [];
+
+    reservations.forEach((reservation) => {
+      const range = eachDayOfInterval({
+        start: new Date(reservation.startDate),
+        end: new Date(reservation.endDate),
+      });
+
+      dates = [...dates, ...range];
+
+      return dates;
+    });
+  }, [reservations]);
+
   const category = useMemo(
     () => categories.find((item) => item.label === listing.category),
     [listing.category]
   );
+
+  const onCreateReservation = useCallback(async () => {
+    if (!currentUser) {
+      return loginModal.onOpen();
+    }
+
+    setIsLoading(true);
+
+    try {
+      await axios.post("/api/reservations", {
+        totalPrice,
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+        listingId: listing.id,
+      });
+
+      toast.success("Listing successfully reserved");
+      setDateRange(initialDateRange);
+      router.refresh();
+    } catch (error) {
+      toast.error("Something went wrong");
+    }
+
+    setIsLoading(false);
+  }, [
+    currentUser,
+    loginModal,
+    totalPrice,
+    dateRange,
+    listing.id,
+    initialDateRange,
+    router,
+  ]);
+
+  useEffect(() => {
+    if (dateRange.startDate && dateRange.endDate) {
+      const dayCount = differenceInDays(dateRange.endDate, dateRange.startDate);
+    }
+
+    return () => {};
+  }, [dateRange]);
 
   return (
     <Container>
