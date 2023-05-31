@@ -65,7 +65,13 @@ const UserMenu = ({ currentUser }: Props) => {
                   }}
                   label="My trips"
                 />
-                <MenuItem onClick={() => {}} label="My favourites" />
+                <MenuItem
+                  onClick={() => {
+                    router.push("/favourites");
+                    toggleOpen();
+                  }}
+                  label="My favourites"
+                />
                 <MenuItem
                   onClick={() => {
                     router.push("/reservations");
