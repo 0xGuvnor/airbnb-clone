@@ -4,10 +4,8 @@ interface Props {
   listingId?: string;
 }
 
-export default async (props: Props) => {
+export default async ({ listingId }: Props) => {
   try {
-    const { listingId } = props;
-
     const listing = await prisma.listing.findUnique({
       where: { id: listingId },
       include: { user: true },

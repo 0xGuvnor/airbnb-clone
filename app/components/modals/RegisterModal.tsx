@@ -33,6 +33,7 @@ const RegisterModal = () => {
     try {
       await axios.post("/api/register", data);
       registerModal.onClose();
+      loginModal.onOpen();
     } catch (error) {
       if (isAxiosError(error)) {
         toast.error(error.message);
